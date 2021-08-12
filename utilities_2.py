@@ -16,6 +16,8 @@ import json
 import PIL
 from PIL import Image
 
+import os, random
+
 
 
 '''
@@ -26,9 +28,9 @@ import utilities_2
 
 
 
-
-
-
+    
+    
+    
 
 ''' Importation des images, leurs transformations et la création de 3 catégories : entrainement, validation, test '''
 def load_data(data_dir):
@@ -36,7 +38,7 @@ def load_data(data_dir):
     train_dir = data_dir + '/train'
     valid_dir = data_dir + '/valid'
     test_dir = data_dir + '/test'
-
+    
     # Définir les transformations pour les données servant à la formation, au test et à la validation
     data_transforms = {
         'train': transforms.Compose([
@@ -74,16 +76,16 @@ def load_data(data_dir):
         'valid' : torch.utils.data.DataLoader(image_datasets['valid'], batch_size=32, shuffle=True),
         'test' : torch.utils.data.DataLoader(image_datasets['test'], batch_size=32, shuffle=False)
     }
-
+    
     #print("data_transforms", data_transforms)
     return image_datasets, dataloaders
-
-
-
+    
+    
+    
     #print("Données chargée OK")
     #print("image_datasets : ", image_datasets)
     #print("dataloaders: ", dataloaders)
-
+    
 
 
 # ------------------------------------------ Tester "load_data"
@@ -108,9 +110,9 @@ def model_setup(arch, hidden_units, flower_species, gpu):
     with open('cat_to_name.json', 'r') as f:
         flower_to_name = json.load(f)
         #print(flower_to_name)
-    '''
-
-
+    '''   
+        
+        
     ''' Définir un nouveau réseau feed-forward non entraîné (pour les dernières couches)
     comme classificateur en utilisant comme fonction d'activation Dropout et ReLU. '''
     # CHOIX D'UN NETWORK PRÉ-ENTRAINÉ (Transfer learning)
@@ -130,7 +132,7 @@ def model_setup(arch, hidden_units, flower_species, gpu):
     model.classifier = nn.Sequential(OrderedDict([
                           ('fc1', nn.Linear(25088, 1024)), # 1er couche
                           ('drop', nn.Dropout(p=0.5)), # activation function
-                          ('relu', nn.ReLU()),
+                          ('relu', nn.ReLU()), 
                           ('fc2', nn.Linear(1024, 102)), # couche de sortie
                           ('output', nn.LogSoftmax(dim=1)) # loss function
                           ]))
@@ -142,7 +144,7 @@ def model_setup(arch, hidden_units, flower_species, gpu):
 
     #print("model_setup OK")
     #print("model : ", model) #---> model VGG
-
+    
     return model
 
 
@@ -165,14 +167,14 @@ def model_setup(arch, hidden_units, flower_species, gpu):
 def optimizer_setup(model,lr):
     criterion = nn.NLLLoss()  # nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.classifier.parameters(), lr)
-
+    
     # Decay LR by a factor of 0.1 every 4 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=4, gamma=0.1)
 
     #print("optimizer_setup() ------")
     #print("criterion : ", criterion)
-    #print("optimizer : ", optimizer)
-
+    #print("optimizer : ", optimizer) 
+    
     return criterion, optimizer
 
 
@@ -269,7 +271,7 @@ model = models.vgg19(pretrained=True)
 data_dir = 'flowers'
 training_loader = torch.utils.data.DataLoader(datasets.ImageFolder(data_dir + '/train'), batch_size=64, shuffle=True)
 validation_loader = torch.utils.data.DataLoader(datasets.ImageFolder(data_dir + '/valid'), batch_size=64, shuffle=True)
-epochs = 5
+epochs = 5 
 learning_rate = 0.01
 criterion = nn.NLLLoss()
 optimizer = optim.Adam(model.classifier.parameters(), lr=learning_rate)
@@ -294,8 +296,8 @@ def save_checkpoint(path, arch, image_datasets, model, hidden_units, flower_spec
             'class_to_idx': model.class_to_idx},
             path)
     print("save_checkpoint OK")
-
-
+    
+    
 
 
 
@@ -304,18 +306,18 @@ def load_model(path, flower_species):
     checkpoint = torch.load('checkpoint.pth')
     #structure = save_checkpoint['arch']
 
-
+       
     if arch == 'densenet121':
         model = models.densenet121(pretrained=True)
     elif arch == 'vgg19':
         model = models.vgg19(pretrained=True)
     else:
-        print("{} Pas de modèle valide".format(arch))
-
-
+        print("{} Pas de modèle valide".format(arch))    
+    
+        
     for param in model.parameters():
         param.requires_grad=False
-
+    
     '''
     model.classifier= nn.Sequential(
                     nn.Linear(model.classifier.in_features,checkpoint['hidden_layer']),
@@ -331,11 +333,13 @@ def load_model(path, flower_species):
     #optimizer.load_state_dict(checkpoint['optimizer'])
     model.load_state_dict(checkpoint['state_dict'])
     model.class_to_idx = checkpoint['class_to_idx']
-
-    model.class_to_idx = checkpoint['class_to_idx']
-    model.load_state_dict(checkpoint['state_dict'])
-
+    
+    #classIdx = model.class_to_idx
+    #model_2 = models.vgg19(pretrained=True)
+    
+ 
     print("load model Ok")
+    
     return model
 
 
@@ -352,7 +356,7 @@ def process_image(image):
     std = np.array([0.229, 0.224, 0.225])
     img = (img - mean) / std
     img = img.transpose((2, 0, 1))
-
+    
     print("process image OK")
     return img
 
@@ -374,13 +378,11 @@ def imshow(image, ax=None, title=None):
     return ax
 
 
-''' --------------------- Prédiction de la CLASS- avec/sans l'utilisation du GPU --------------------- '''
 
+''' --------------------- Prediction pour l'image --------------------- '''
 
 def predict(path, model, topk=5):
-    ''' Predict the class (or classes) of an image using a trained deep learning model.
-    '''
-    '''
+    
     cuda = torch.cuda.is_available()
     if cuda:
         # Move model parameters to the GPU
@@ -390,37 +392,27 @@ def predict(path, model, topk=5):
     else:
         model.cpu()
         print("We go for CPU")
-    '''
-    # turn off dropout
+ 
+
     model.eval()
-
-    # The image
+    
     image = process_image(path)
-
-    # tranfer to tensor
     image = torch.from_numpy(np.array([image])).float()
-
-    # The image becomes the input
     image = Variable(image)
 
-    '''
+   
     if cuda:
         image = image.cuda()
-    '''
+  
     output = model.forward(image)
 
     probabilities = torch.exp(output).data
     prob = torch.topk(probabilities, topk)[0].tolist()[0] # probabilities
     index = torch.topk(probabilities, topk)[1].tolist()[0] # index
 
-
-
     ind = []
     for i in range(len(model.class_to_idx.items())):
         ind.append(list(model.class_to_idx.items())[i][0])
-
-
-    # transfer index to label
 
     label = []
     for i in range(5):
@@ -433,4 +425,10 @@ def predict(path, model, topk=5):
 
 
 
+
+
+
+
 #
+
+
