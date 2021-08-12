@@ -28,9 +28,6 @@ import utilities_2
 
 
 
-    
-    
-    
 
 ''' Importation des images, leurs transformations et la création de 3 catégories : entrainement, validation, test '''
 def load_data(data_dir):
@@ -80,8 +77,7 @@ def load_data(data_dir):
     #print("data_transforms", data_transforms)
     return image_datasets, dataloaders
     
-    
-    
+
     #print("Données chargée OK")
     #print("image_datasets : ", image_datasets)
     #print("dataloaders: ", dataloaders)
@@ -94,14 +90,9 @@ def load_data(data_dir):
 
 
 
-
-
-
-
 ''' Function MODEL_SETUP '''
 
-arch = 'vgg19'
-
+# arch = 'vgg19'
 
 
 def model_setup(arch, hidden_units, flower_species, gpu):
@@ -153,14 +144,6 @@ def model_setup(arch, hidden_units, flower_species, gpu):
 #model_setup("vgg19", 20, "pink primrose", False)
 
 
-
-
-
-
-
-
-
-
 ''' Entrainement du modèle : utilise les couches du classificateur en utilisant la rétro-propagation
 (et le réseau pré-entraîné pour obtenir les caractéristiques/features)'''
 
@@ -168,7 +151,6 @@ def optimizer_setup(model,lr):
     criterion = nn.NLLLoss()  # nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.classifier.parameters(), lr)
     
-    # Decay LR by a factor of 0.1 every 4 epochs
     exp_lr_scheduler = lr_scheduler.StepLR(optimizer, step_size=4, gamma=0.1)
 
     #print("optimizer_setup() ------")
@@ -215,18 +197,16 @@ def train(model, epochs, learning_rate, criterion, optimizer, training_loader, v
                 inputs = Variable(inputs)
                 labels = Variable(labels)
 
-            # Forward and backward passes
             optimizer.zero_grad() # zero's out the gradient, otherwise will keep adding
-
-            output = model.forward(inputs) # Forward propogation
-            loss = criterion(output, labels) # Calculates loss
+            output = model.forward(inputs) # propogation
+            loss = criterion(output, labels) # calcul perte
 
             loss.backward() # Calcul du Gradient
             optimizer.step() # Mise à jour des Weights selon le Gradient et le Learning rate
             running_loss += loss.item()
 
             if steps % print_every == 0:
-                validation_loss, accuracy = validate(model, criterion, validation_loader) # voir function plus bas (6)
+                validation_loss, accuracy = validate(model, criterion, validation_loader) # voir function plus bas validate()
 
                 print("Epoch: {}/{} ".format(epoch+1, epochs),
                         "TRAINING LOSS: {:.3f} ".format(running_loss/print_every),
@@ -383,24 +363,20 @@ def imshow(image, ax=None, title=None):
 
 def predict(path, model, topk=5):
     
-    cuda = torch.cuda.is_available()
-    if cuda:
-        # Move model parameters to the GPU
+    if torch.cuda.is_available():
         model.cuda()
-        print("Number of GPUs:", torch.cuda.device_count())
-        print("Device name:", torch.cuda.get_device_name(torch.cuda.device_count()-1))
+        print("nombre de GPU:", torch.cuda.device_count())
+        print("Nom:", torch.cuda.get_device_name(torch.cuda.device_count()-1))
     else:
         model.cpu()
-        print("We go for CPU")
+        print("ok CPU")
  
-
     model.eval()
     
     image = process_image(path)
     image = torch.from_numpy(np.array([image])).float()
     image = Variable(image)
 
-   
     if cuda:
         image = image.cuda()
   
