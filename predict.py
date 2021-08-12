@@ -20,7 +20,7 @@ import argparse
 import utilities_2
 
 import os, random
-import tensorflow as tf
+#import tensorflow as tf
 
 
 
@@ -68,8 +68,6 @@ image_path = ("flowers/test/4/image_05658.jpg")
 model = utilities_2.process_image(image_path) # -> conversion
 
 #model_imshow = utilities_2.imshow(image, ax=None, title=None)
-
-
 
 
 
