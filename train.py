@@ -25,13 +25,13 @@ import utilities_2
 
 args = argparse.ArgumentParser(description='Train.py')
 
-args.add_argument('data_dir', nargs='?', action="store", default="./flowers/", help='dataset folder used for training, validation and testing')
-args.add_argument('--gpu', dest="gpu", action="store_true", default="False", help='use gpu for training')
-args.add_argument('--save_dir', dest="save_dir", action="store", default="checkpoint_2.pth", help='checkpoint for saving the trained model')
-args.add_argument('--learning_rate', dest="learning_rate", action="store", default=0.001, help='learning rate for the training')
-args.add_argument('--epochs', dest="epochs", action="store", type=int, default=8, help='number of epochs for the training')
-args.add_argument('--arch', dest="arch", action="store", choices=["vgg19","vgg19"], default="vgg19", type = str, help='sets the architecture of the network')
-args.add_argument('--hidden_units', type=int, dest="hidden_units", action="store", default=512, help='number of nodes in the hidden layer of the classifier')
+args.add_argument('data_dir', nargs='?', action="store", default="./flowers/", help='dossier contenant les images')
+args.add_argument('--gpu', dest="gpu", action="store_true", default="False", help='utilisation de GPU')
+args.add_argument('--save_dir', dest="save_dir", action="store", default="checkpoint_2.pth", help='checkpoint pour enregistrer le modèle entrainé')
+args.add_argument('--learning_rate', dest="learning_rate", action="store", default=0.001, help='learning rate')
+args.add_argument('--epochs', dest="epochs", action="store", type=int, default=8, help='epochs')
+args.add_argument('--arch', dest="arch", action="store", choices=["densenet121","vgg19"], default="vgg19", type = str, help='type architecture pour network')
+args.add_argument('--hidden_units', type=int, dest="hidden_units", action="store", default=512, help='nombre de nodes pour les couches cachées du classificateur')
 
 args = args.parse_args()
 data_dir = args.data_dir
@@ -43,13 +43,13 @@ hidden_units= args.hidden_units
 gpu = args.gpu
 epochs = args.epochs
 
-print("data_dir : ", data_dir)
+print("dossier image : ", data_dir)
 print("gpu :", gpu)
-print("arch :", arch)
+print("architecture :", arch)
 print("epochs :", epochs)
-print("lr : ", lr)
-print("hidden_units", hidden_units)
-print("save_dir", save_dir)
+print("learning rate : ", lr)
+print("couches cachées", hidden_units)
+print("checkpoint .pth", save_dir)
 
 
 with open('cat_to_name.json', 'r') as f:
@@ -57,18 +57,18 @@ with open('cat_to_name.json', 'r') as f:
     flower_species = len(flower_to_name)
 
 
-image_datasets, dataloaders = utilities_2.load_data(data_dir) # load data
-model = utilities_2.model_setup(arch, hidden_units, flower_species, gpu) # création du modèle
-criterion, optimizer = utilities_2.optimizer_setup(model, lr) # optimisation du modèle
+image_datasets, dataloaders = utilities_2.load_data(data_dir) # F > load data
+model = utilities_2.model_setup(arch, hidden_units, flower_species, gpu) # F > création du modèle
+criterion, optimizer = utilities_2.optimizer_setup(model, lr) # F > optimisation du modèle
 
 
 training_loader = dataloaders['train']
 validation_loader = dataloaders['valid']
-model = utilities_2.train(model, epochs, learning_rate, criterion, optimizer, training_loader, validation_loader)
+model = utilities_2.train(model, epochs, learning_rate, criterion, optimizer, training_loader, validation_loader) # F > train
 
 
 #utilities.test(dataloaders, model, criterion, gpu)
-utilities_2.save_checkpoint('./model_transfer_densenet161.pt', arch, image_datasets, model, hidden_units, flower_species)
+utilities_2.save_checkpoint('./model_transfer_densenet161.pt', arch, image_datasets, model, hidden_units, flower_species) # F > enregistrement du checkpoint
 
 
 
